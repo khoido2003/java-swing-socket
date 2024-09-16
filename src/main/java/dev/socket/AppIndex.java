@@ -41,4 +41,8 @@ public class AppIndex {
       System.out.println("Joining room...");
     });
   }
+
+  public LobbyView getLobbyView() {
+    return lobbyView;
+  }
 }

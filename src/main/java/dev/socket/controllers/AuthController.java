@@ -33,15 +33,15 @@ public class AuthController {
 
         /////////////////////////////////////////////
 
+        // Move to the lobby via the app
+        app.showLobby();
+
         // Connect user to the socket server
         int port = 8082;
-        SocketClient client = new SocketClient("127.0.0.1", port, token);
+        SocketClient client = new SocketClient("127.0.0.1", port, token, app.getLobbyView());
         new Thread(() -> client.start()).start();
 
         /////////////////////////////////////////////
-
-        // Move to the lobby via the app
-        app.showLobby();
 
       } else {
         JOptionPane.showMessageDialog(null, "Login Failed!");
