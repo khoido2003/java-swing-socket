@@ -1,48 +1,18 @@
 package dev.socket;
 
 import dev.socket.controllers.AuthController;
-import dev.socket.services.AuthService;
-import dev.socket.views.LobbyView;
-import dev.socket.views.SignInView;
+import dev.socket.views.AuthView;
 
 public class AppIndex {
-  private SignInView signInView;
-  private AuthService authService;
-  private LobbyView lobbyView;
+
+  private AuthController authController;
 
   public AppIndex() {
-    // Initialize models
-    authService = new AuthService();
+    this.authController = new AuthController();
 
-    // Initialize views
-    signInView = new SignInView();
-    lobbyView = new LobbyView();
-
-    // Initialize controllers
-    initAuthController();
+    AuthView authView = new AuthView(authController);
+    authController.setAuthView(authView);
+    authView.setVisible(true);
   }
 
-  private void initAuthController() {
-    new AuthController(signInView, authService, this); // Passing `this` for navigation
-    signInView.setVisible(true);
-  }
-
-  // Method to move to lobby
-  public void showLobby() {
-    signInView.dispose(); // Close sign-in view
-    lobbyView.setVisible(true); // Show lobby view
-    setupLobbyActions();
-  }
-
-  // Set up actions for the Lobby
-  private void setupLobbyActions() {
-    lobbyView.setJoinRoomAction(event -> {
-      // Handle joining room logic here, including WebSocket integration
-      System.out.println("Joining room...");
-    });
-  }
-
-  public LobbyView getLobbyView() {
-    return lobbyView;
-  }
 }

@@ -2,50 +2,57 @@ package dev.socket.controllers;
 
 import javax.swing.JOptionPane;
 
-import dev.socket.AppIndex;
 import dev.socket.models.User;
-import dev.socket.network.SocketClient;
 import dev.socket.services.AuthService;
+import dev.socket.views.AuthView;
 import dev.socket.views.SignInView;
+import dev.socket.views.SignUpView;
 
 public class AuthController {
-  private SignInView signInView;
-  private AuthService authService;
-  private AppIndex app;
+  private AuthService authService = new AuthService();
+  private AuthView authView;
 
-  public AuthController(SignInView signInView, AuthService authService, AppIndex app) {
-    this.signInView = signInView;
-    this.authService = authService;
-    this.app = app;
-    initController();
+  public void signUpAction(User user, SignUpView signUpView) {
+    String result = authService.signUp(user);
+
+    if (result == "success") {
+      JOptionPane.showMessageDialog(signUpView, "Successfully sign up!");
+    } else {
+      JOptionPane.showMessageDialog(signUpView, "Failed to sign up!");
+    }
   }
 
-  private void initController() {
-    signInView.setSignInAction(e -> {
-      String email = signInView.getEmail();
-      String password = signInView.getPassword();
-      User user = new User(email, password);
+  public void signInAction(User user, SignInView signInView) {
+    String result = authService.signIn(user);
 
-      String token = authService.signIn(user);
-      if (token != null) {
-        user.setJwtToken(token);
-        JOptionPane.showMessageDialog(null, "Login Successful!");
+    if (result == "success") {
+      JOptionPane.showMessageDialog(signInView, "Sign in successfully");
 
-        /////////////////////////////////////////////
+      DashboardController dashboardController = new DashboardController();
+      signInView.setVisible(false);
 
-        // Move to the lobby via the app
-        app.showLobby();
-
-        // Connect user to the socket server
-        int port = 8082;
-        SocketClient client = new SocketClient("127.0.0.1", port, token, app.getLobbyView());
-        new Thread(() -> client.start()).start();
-
-        /////////////////////////////////////////////
-
-      } else {
-        JOptionPane.showMessageDialog(null, "Login Failed!");
-      }
-    });
+    } else {
+      JOptionPane.showMessageDialog(signInView, "Invalid username or password");
+    }
   }
+
+  public void showSignInView() {
+    SignInView signInView = new SignInView(this);
+    signInView.setVisible(true);
+
+  }
+
+  public void showSignUpView() {
+    SignUpView signUpView = new SignUpView(this);
+    signUpView.setVisible(true);
+  }
+
+  public void showAuthView() {
+    this.authView.setVisible(true);
+  }
+
+  public void setAuthView(AuthView authView) {
+    this.authView = authView;
+  }
+
 }

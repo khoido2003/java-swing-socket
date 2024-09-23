@@ -121,6 +121,7 @@ public class SocketClient {
         } else if ("OFFLINE".equals(status)) {
           onlineFriends.remove(friendId);
           SwingUtilities.invokeLater(() -> lobbyView.updateOnlineFriendsList(onlineFriends.toArray(new String[0])));
+
         }
 
       }
