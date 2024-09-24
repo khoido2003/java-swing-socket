@@ -2,7 +2,9 @@ package dev.socket.controllers;
 
 import javax.swing.JOptionPane;
 
+import dev.socket.constants.Const;
 import dev.socket.models.User;
+import dev.socket.network.SocketClient;
 import dev.socket.services.AuthService;
 import dev.socket.views.AuthView;
 import dev.socket.views.SignInView;
@@ -28,7 +30,14 @@ public class AuthController {
     if (result == "success") {
       JOptionPane.showMessageDialog(signInView, "Sign in successfully");
 
-      DashboardController dashboardController = new DashboardController();
+      SocketClient socketClient = new SocketClient("127.0.0.1", Const.port, authService.jwtToken);
+      socketClient.start();
+
+      LobbyController lobbyController = new LobbyController();
+
+      // Add the observer to the socket client to receive updates from the server
+      socketClient.addObserver(lobbyController);
+
       signInView.setVisible(false);
 
     } else {

@@ -10,6 +10,8 @@ import dev.socket.models.User;
 
 public class AuthService {
 
+  public String jwtToken;
+
   public String signIn(User user) {
     try {
       URL url = new URL("http://localhost:8081/login");
@@ -40,7 +42,9 @@ public class AuthService {
           // Set the token in the user object
           user.setJwtToken(token);
 
-          System.out.println("Token: " + token);
+          // System.out.println("Token: " + token);
+          jwtToken = token;
+
           return "success";
         } else {
           System.out.println("Login failed: " + jsonResponse.getString("message"));
