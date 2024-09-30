@@ -14,6 +14,8 @@ public class SocketClient {
   private String serverAddress;
   private int serverPort;
   private String jwtToken;
+  PrintWriter out;
+  BufferedReader in;
 
   // List of observers (subscribers)
   private List<SocketObserver> observers;
@@ -22,7 +24,6 @@ public class SocketClient {
     this.serverAddress = serverAddress;
     this.serverPort = serverPort;
     this.jwtToken = jwtToken;
-
     this.observers = new ArrayList<>();
   }
 
@@ -46,10 +47,10 @@ public class SocketClient {
     try (Socket socket = new Socket(serverAddress, serverPort)) {
 
       // Write the data to the server
-      PrintWriter out = new PrintWriter(socket.getOutputStream(), true);
+      this.out = new PrintWriter(socket.getOutputStream(), true);
 
       // Read data from the server
-      BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+      this.in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
 
       ///////////////////////////////////////////////////////
 
@@ -80,10 +81,14 @@ public class SocketClient {
     }
   }
 
+  public void sendMessage(String message) {
+    out.println(message);
+    out.flush();
+  }
+
   ///////////////////////////////////////////////////////////
 
   private class IncomingMessageHandler implements Runnable {
-
     private BufferedReader in;
 
     public IncomingMessageHandler(BufferedReader in) {
