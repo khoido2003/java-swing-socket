@@ -1,13 +1,15 @@
 package dev.socket.models;
 
+import java.util.ArrayList;
+import java.util.List;
+
 public class User {
   private String userId;
   private String username;
   private String password;
   private String email;
   private int totalPoints;
-  private String status;
-  private String jwtToken; // Add JWT token field
+  private String jwtToken;
 
   public User(String email, String password) {
     this.email = email;
@@ -20,13 +22,66 @@ public class User {
     this.username = username;
   }
 
-  public User(String userId, String username, String password, String email, int totalPoints, String status) {
+  public User(String userId, String username, String password, String email, int totalPoints) {
     this.userId = userId;
     this.username = username;
     this.password = password;
     this.email = email;
     this.totalPoints = totalPoints;
-    this.status = status;
+
+  }
+
+  public static User dejsonlizeObject(String jsonString) {
+    // Remove the curly braces and split by comma to get individual key-value pairs
+    jsonString = jsonString.replace("{", "").replace("}", "");
+    String[] pairs = jsonString.split(",");
+
+    String userId = null, username = null, password = null, email = null;
+    int totalPoints = 0;
+
+    // Parse each key-value pair
+    for (String pair : pairs) {
+      String[] keyValue = pair.split(":");
+      String key = keyValue[0].trim().replace("\"", "");
+      String value = keyValue[1].trim().replace("\"", "");
+
+      switch (key) {
+        case "userId":
+          userId = value;
+          break;
+        case "username":
+          username = value;
+          break;
+        case "password":
+          password = value;
+          break;
+        case "email":
+          email = value;
+          break;
+        case "totalPoints":
+          totalPoints = Integer.parseInt(value);
+          break;
+      }
+    }
+    // Create a new User object from the parsed values
+    return new User(userId, username, password, email, totalPoints);
+  }
+
+  public static List<User> dejsonlizeArray(String json) {
+    List<User> users = new ArrayList<User>();
+
+    json = json.trim();
+    json = json.substring(1, json.length() - 1);
+
+    String[] objects = json.split("},");
+    for (int i = 0; i < objects.length; i++) {
+      if (!objects[i].endsWith("}")) {
+        objects[i] = objects[i] + "}";
+      }
+      User user = dejsonlizeObject(objects[i]);
+      users.add(user);
+    }
+    return users;
   }
 
   // Add jwtToken getter and setter
@@ -47,10 +102,6 @@ public class User {
     return username;
   }
 
-  public String getStatus() {
-    return status;
-  }
-
   public String getUserId() {
     return userId;
   }
@@ -69,10 +120,6 @@ public class User {
 
   public void setPassword(String password) {
     this.password = password;
-  }
-
-  public void setStatus(String status) {
-    this.status = status;
   }
 
   public void setTotalPoints(int totalPoints) {

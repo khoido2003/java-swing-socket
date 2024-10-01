@@ -1,13 +1,10 @@
 package dev.socket.views;
 
 import java.awt.FlowLayout;
-
 import javax.swing.*;
-
 import dev.socket.controllers.AuthController;
 
 public class AuthView extends JFrame {
-
   private AuthController authController;
 
   public AuthView(AuthController authController) {
@@ -39,12 +36,10 @@ public class AuthView extends JFrame {
   private void showLoginForm() {
     authController.showSignInView();
     this.setVisible(false);
-
   }
 
   private void showSignUpForm() {
     authController.showSignUpView();
     this.setVisible(false);
   }
-
 }
