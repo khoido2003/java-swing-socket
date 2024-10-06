@@ -43,6 +43,7 @@ public class AuthController {
       lobbyController.setLobbyView(lobbyView);
       lobbyController.setToken(authService.jwtToken);
       lobbyController.sendRequestFriendList();
+      lobbyController.getPendingFriendList();
 
       // Add the observer to the socket client to receive updates from the server
       socketClient.addObserver(lobbyController);

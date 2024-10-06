@@ -49,7 +49,7 @@ public class JwtUtils {
 
       String userId = claims.getSubject();
       String email = (String) claims.get("email");
-      String username = (String) claims.get("username");
+      String username = (String) claims.get("name");
 
       return new JwtToken(userId, email, username);
 

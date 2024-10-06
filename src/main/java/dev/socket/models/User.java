@@ -70,10 +70,14 @@ public class User {
   public static List<User> dejsonlizeArray(String json) {
     List<User> users = new ArrayList<User>();
 
-    json = json.trim();
-    json = json.substring(1, json.length() - 1);
+    if (json.equals("[]")) {
+      return users;
+    }
 
-    String[] objects = json.split("},");
+    json = json.trim();
+    json = json.substring(1, json.length() - 2);
+
+    String[] objects = json.split("}, ");
     for (int i = 0; i < objects.length; i++) {
       if (!objects[i].endsWith("}")) {
         objects[i] = objects[i] + "}";

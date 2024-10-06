@@ -1,6 +1,7 @@
 package dev.socket.views;
 
 import javax.swing.*;
+
 import dev.socket.controllers.LobbyController;
 import dev.socket.models.User;
 
@@ -23,9 +24,15 @@ public class LobbyView extends JFrame {
 
   private DefaultListModel<FriendPanel> friendsListModel;
   private JList<FriendPanel> friendsList;
+  private DefaultListModel<FriendRequestPanel> friendRequestListModel;
+  private JList<FriendRequestPanel> friendRequestList;
+  private String userId;
+  private String userName;
 
   public LobbyView(LobbyController lobbyController) {
+
     this.lobbyController = lobbyController;
+
     setTitle("Lobby");
     setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
     setSize(1200, 1000); // Increased size
@@ -43,8 +50,8 @@ public class LobbyView extends JFrame {
     leftPanel.setLayout(new BoxLayout(leftPanel, BoxLayout.Y_AXIS));
     leftPanel.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
 
-    userNameLabel = new JLabel("Tên: Do Minh Khoi");
-    userIdLabel = new JLabel("ID: wwvipw_930298");
+    userNameLabel = new JLabel("Tên: " + this.userName);
+    userIdLabel = new JLabel("ID: " + this.userId);
 
     joinBattleButton = new JButton("Join Battle");
     friendlyMatchButton = new JButton("Friendly match");
@@ -58,6 +65,20 @@ public class LobbyView extends JFrame {
     leftPanel.add(friendlyMatchButton);
     leftPanel.add(Box.createRigidArea(new Dimension(0, 10)));
     leftPanel.add(rankingsButton);
+
+    leftPanel.add(Box.createRigidArea(new Dimension(0, 20))); // Space between elements
+    // New section for Friend Requests
+    JPanel friendRequestPanel = new JPanel();
+    friendRequestPanel.setLayout(new BorderLayout());
+    friendRequestPanel.setBorder(BorderFactory.createTitledBorder("Friend Requests"));
+
+    friendRequestListModel = new DefaultListModel<>();
+    friendRequestList = new JList<>(friendRequestListModel);
+    friendRequestList.setCellRenderer(new FriendRequestRenderer());
+    JScrollPane friendRequestScrollPane = new JScrollPane(friendRequestList);
+
+    friendRequestPanel.add(friendRequestScrollPane, BorderLayout.CENTER);
+    leftPanel.add(friendRequestPanel, BorderLayout.SOUTH); // Add friend requests panel at the bottom
 
     mainPanel.add(leftPanel, BorderLayout.WEST);
 
@@ -108,7 +129,7 @@ public class LobbyView extends JFrame {
 
     friendsList.addMouseListener(new java.awt.event.MouseAdapter() {
       public void mouseClicked(java.awt.event.MouseEvent evt) {
-        int index = friendsList.locationToIndex(evt.getPoint()); // Get the index of the item clicked
+        int index = friendsList.locationToIndex(evt.getPoint());
         if (index >= 0) {
           FriendPanel friendPanel = friendsListModel.get(index);
           JButton inviteButton = friendPanel.getInviteButton();
@@ -116,12 +137,56 @@ public class LobbyView extends JFrame {
         }
       }
     });
+
+    searchResultList.addMouseListener(new java.awt.event.MouseAdapter() {
+      public void mouseClicked(java.awt.event.MouseEvent evt) {
+        int index = searchResultList.locationToIndex(evt.getPoint());
+        if (index >= 0) {
+          UserPanel userPanel = searchResultListModel.get(index);
+          JButton addFriendButton = userPanel.addFriendButton;
+
+          addFriendButton.doClick();
+        }
+      }
+    });
+
+    friendRequestList.addMouseListener(new java.awt.event.MouseAdapter() {
+      public void mouseClicked(java.awt.event.MouseEvent evt) {
+        int index = friendRequestList.locationToIndex(evt.getPoint());
+        if (index >= 0) {
+          FriendRequestPanel friendRequestPanel = friendRequestListModel.get(index);
+          JButton acceptButton = friendRequestPanel.getAcceptButton();
+          acceptButton.doClick();
+          JButton declineButton = friendRequestPanel.getDeclineButton();
+          declineButton.doClick();
+        }
+      }
+    });
+  }
+
+  public void setUserId(String userId) {
+    this.userId = userId;
+  }
+
+  public void setUserName(String userName) {
+    this.userName = userName;
+  }
+
+  public String getUserName() {
+    return userName;
+  }
+
+  public String getUserId() {
+    return userId;
+  }
+
+  public void updateUserInfo() {
+    userNameLabel.setText("Tên: " + this.userName);
+    userIdLabel.setText("ID: " + this.userId);
   }
 
   // Method to add a friend to the list
   public void addFriendToList(java.util.List<User> users) {
-
-    System.out.println("USERS: " + users);
     for (User user : users) {
       friendsListModel.addElement(new FriendPanel(user, true));
     }
@@ -133,10 +198,31 @@ public class LobbyView extends JFrame {
 
   // Method to simulate searching for a friend
   public void searchFriend() {
-    String friendName = searchField.getText();
-    if (!friendName.isEmpty()) {
-      searchResultListModel.addElement(new UserPanel(friendName));
+    String username = searchField.getText().trim();
+    if (username.isEmpty()) {
+      searchResultListModel.clear();
+      return;
     }
+
+    this.lobbyController.sendFindUser(username);
+  }
+
+  public void addUserToList(java.util.List<User> users) {
+    searchResultListModel.clear();
+    for (User user : users) {
+      searchResultListModel.addElement(new UserPanel(user.getUsername(), user.getUserId()));
+    }
+  }
+
+  public void addPendingFriendRequestList(java.util.List<User> users) {
+    friendRequestListModel.clear();
+    for (User user : users) {
+      friendRequestListModel.addElement(new FriendRequestPanel(user, this, this.lobbyController));
+    }
+  }
+
+  public void addFriendRequestToPendingList(User user) {
+    friendRequestListModel.addElement(new FriendRequestPanel(user, this, this.lobbyController));
   }
 
   ///////////////////////////////////////////////////////////////////////
@@ -175,10 +261,12 @@ public class LobbyView extends JFrame {
   // Custom panel for displaying user info with an "Add Friend" button
   class UserPanel extends JPanel {
     private String userName;
+    private String userId;
     private JButton addFriendButton;
 
-    public UserPanel(String userName) {
+    public UserPanel(String userName, String userId) {
       this.userName = userName;
+      this.userId = userId;
 
       setLayout(new FlowLayout(FlowLayout.LEFT));
       JLabel nameLabel = new JLabel(userName);
@@ -191,6 +279,7 @@ public class LobbyView extends JFrame {
     }
 
     private void addFriend() {
+      lobbyController.createFriendRequest(userId);
       JOptionPane.showMessageDialog(null, "Friend request sent to " + userName);
     }
   }
@@ -217,4 +306,77 @@ public class LobbyView extends JFrame {
     }
   }
 
+  ///////////////////////////////////////////////////////////////////
+
+  // Custom panel for displaying friend request info with "Accept" and "Decline"
+  // buttons
+  class FriendRequestPanel extends JPanel {
+    private User user;
+    private JButton acceptButton;
+    private JButton declineButton;
+    private LobbyView lobbyView;
+    private LobbyController lobbyController;
+
+    public FriendRequestPanel(User user, LobbyView lobbyView, LobbyController lobbyController) {
+      this.lobbyView = lobbyView;
+      this.user = user;
+      this.lobbyController = lobbyController;
+
+      setLayout(new FlowLayout(FlowLayout.LEFT));
+      JLabel nameLabel = new JLabel(user.getUsername());
+      acceptButton = new JButton("Accept");
+      declineButton = new JButton("Decline");
+
+      add(nameLabel);
+      add(acceptButton);
+      add(declineButton);
+
+      // Add independent action listeners
+      acceptButton.addActionListener(e -> {
+        if (e.getSource() == acceptButton) {
+          acceptRequest();
+        }
+      });
+
+      declineButton.addActionListener(e -> {
+        if (e.getSource() == declineButton) {
+          declineRequest();
+        }
+      });
+    }
+
+    public JButton getAcceptButton() {
+      return acceptButton;
+    }
+
+    public JButton getDeclineButton() {
+      return declineButton;
+    }
+
+    private void acceptRequest() {
+      JOptionPane.showMessageDialog(null, "Friend request from " + user.getUsername() + " accepted.");
+      friendRequestListModel.removeElement(this);
+      lobbyView.updateFriendList(user);
+
+      this.lobbyController.acceptFriendRequest(lobbyView.getUserId(), user.getUserId());
+    }
+
+    private void declineRequest() {
+      JOptionPane.showMessageDialog(null, "Friend request from " + user.getUsername() + " declined.");
+      friendRequestListModel.removeElement(this);
+      // Implement decline logic here if needed
+      // this.lobbyController.declineFriendRequest(lobbyView.getUserId(),
+      // user.getUserId());
+    }
+  }
+
+  // Renderer for friend requests list, displaying a FriendRequestPanel for each
+  // request
+  class FriendRequestRenderer implements ListCellRenderer<FriendRequestPanel> {
+    @Override
+    public Component getListCellRendererComponent(JList<? extends FriendRequestPanel> list,
+        FriendRequestPanel friendRequestPanel, int index, boolean isSelected, boolean cellHasFocus) {
+      return friendRequestPanel;
+    }
+  }
 }

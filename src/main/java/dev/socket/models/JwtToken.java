@@ -3,20 +3,20 @@ package dev.socket.models;
 public class JwtToken {
   public String userId;
   public String email;
-  public String name;
+  public String username;
 
-  public JwtToken(String userId, String email, String name) {
+  public JwtToken(String userId, String email, String username) {
     this.userId = userId;
     this.email = email;
-    this.name = name;
+    this.username = username;
   }
 
   public String getEmail() {
     return email;
   }
 
-  public String getName() {
-    return name;
+  public String getUsername() {
+    return username;
   }
 
   public String getUserId() {
