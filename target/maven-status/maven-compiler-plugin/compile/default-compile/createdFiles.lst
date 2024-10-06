@@ -1,9 +1,7 @@
-dev\socket\views\SignInView.class
-dev\socket\models\AuthModel.class
 dev\socket\models\User.class
-dev\socket\controllers\AuthController.class
-dev\socket\Main.class
 dev\socket\views\LobbyView.class
 dev\socket\network\SocketClient$IncomingMessageHandler.class
+dev\socket\views\SignInView.class
+dev\socket\controllers\AuthController.class
+dev\socket\Main.class
 dev\socket\network\SocketClient.class
-dev\socket\views\AppViews.class

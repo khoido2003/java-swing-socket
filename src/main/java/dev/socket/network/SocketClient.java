@@ -8,74 +8,91 @@ import java.net.Socket;
 import java.util.ArrayList;
 import java.util.List;
 
-import javax.swing.SwingUtilities;
-
-import dev.socket.views.LobbyView;
+import dev.socket.interfaces.SocketObserver;
 
 public class SocketClient {
   private String serverAddress;
   private int serverPort;
   private String jwtToken;
-  private LobbyView lobbyView;
+  PrintWriter out;
+  BufferedReader in;
 
-  public SocketClient(String serverAddress, int serverPort, String jwtToken, LobbyView lobbyView) {
+  // List of observers (subscribers)
+  private List<SocketObserver> observers;
+
+  public SocketClient(String serverAddress, int serverPort, String jwtToken) {
     this.serverAddress = serverAddress;
     this.serverPort = serverPort;
     this.jwtToken = jwtToken;
-    this.lobbyView = lobbyView;
+    this.observers = new ArrayList<>();
+  }
+
+  public void addObserver(SocketObserver observer) {
+    observers.add(observer);
+  }
+
+  // Remove an observer
+  public void removeObserver(SocketObserver observer) {
+    observers.remove(observer);
+  }
+
+  // Notify all observers of a new message
+  public void notifyObservers(String message) {
+    for (SocketObserver observer : observers) {
+      observer.onMessageReceived(message);
+    }
   }
 
   public void start() {
     try (Socket socket = new Socket(serverAddress, serverPort)) {
 
       // Write the data to the server
-      PrintWriter out = new PrintWriter(socket.getOutputStream(), true);
+      this.out = new PrintWriter(socket.getOutputStream(), true);
 
       // Read data from the server
-      BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+      this.in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
 
       ///////////////////////////////////////////////////////
 
+      System.out.println(jwtToken);
       // Send the jwt token to the server to check if it is valid
       out.println(jwtToken);
       out.flush();
 
       ////////////////////////////////////////////////////////
 
-      // Get user input from the terminal
-      BufferedReader userInput = new BufferedReader(new InputStreamReader(System.in));
-      String userInputStr;
-
       // Start a thread to listen for incoming messages
-      new Thread(new IncomingMessageHandler(socket, in, lobbyView)).start();
+      Thread incomingThread = new Thread(new IncomingMessageHandler(in));
+      incomingThread.start(); // Start the incoming handler
 
-      System.out.println("Connected to server. Type a message to send:");
-      while ((userInputStr = userInput.readLine()) != null) {
-        if (userInputStr.trim().isEmpty()) {
-          continue; // Skip empty input
-        }
-        // Send message to server
-        out.println(userInputStr);
-        out.flush();
-      }
+      // Start handling user input in a separate thread
+      Thread userInputThread = new Thread(new UserInputHandler(out));
+      userInputThread.start(); // Start the user input handler in a new thread
+
+      // Optionally, join both threads to wait for their completion
+      incomingThread.join();
+      userInputThread.join();
 
     } catch (IOException e) {
       System.out.println("Client exception: " + e.getMessage());
+    } catch (InterruptedException e) {
+      Thread.currentThread().interrupt(); // Restore interrupted status
+      System.out.println("Thread was interrupted: " + e.getMessage());
     }
   }
 
-  private static class IncomingMessageHandler implements Runnable {
-    private Socket socket;
+  public void sendMessage(String message) {
+    out.println(message);
+    out.flush();
+  }
+
+  ///////////////////////////////////////////////////////////
+
+  private class IncomingMessageHandler implements Runnable {
     private BufferedReader in;
-    private LobbyView lobbyView;
-    private List<String> onlineFriends;
 
-    public IncomingMessageHandler(Socket socket, BufferedReader in, LobbyView lobbyView) {
-      this.socket = socket;
+    public IncomingMessageHandler(BufferedReader in) {
       this.in = in;
-      this.lobbyView = lobbyView;
-      this.onlineFriends = new ArrayList<String>();
-
     }
 
     public void run() {
@@ -84,58 +101,39 @@ public class SocketClient {
         while ((message = in.readLine()) != null) {
           System.out.println("Received from server: " + message);
 
-          // Check if the message is the online friends list
-          if (message.startsWith("ONLINE_FRIENDS:")) {
-            // Example: ONLINE_FRIENDS:friend1,friend2,friend3
-            String[] friends = message.substring("ONLINE_FRIENDS:".length()).split(",");
-
-            if (friends.length == 1 && friends[0].equals("None")) {
-              friends = new String[] {}; // Handle the "None" case
-            }
-
-            System.out.println(friends);
-
-            updateOnlineFriendsList(friends);
-
-          } else if (message.startsWith("FRIEND_STATUS_CHANGE:")) {
-            handleStatusChange(message);
-          }
+          notifyObservers(message);
         }
       } catch (IOException e) {
         System.out.println("Error reading from server: " + e.getMessage());
       }
     }
+  }
 
-    public void handleStatusChange(String message) {
-      String[] parts = message.split(":");
-      if (parts.length == 3) {
-        String friendId = parts[1];
-        String status = parts[2];
+  ////////////////////////////////////////////////////////
 
-        if ("ONLINE".equals(status)) {
-          if (!onlineFriends.contains(friendId)) {
-            onlineFriends.add(friendId);
-            // Update the friends list on the GUI
-            SwingUtilities.invokeLater(() -> lobbyView.updateOnlineFriendsList(onlineFriends.toArray(new String[0])));
-          }
-        } else if ("OFFLINE".equals(status)) {
-          onlineFriends.remove(friendId);
-          SwingUtilities.invokeLater(() -> lobbyView.updateOnlineFriendsList(onlineFriends.toArray(new String[0])));
+  private class UserInputHandler implements Runnable {
 
-        }
+    private PrintWriter out;
 
-      }
+    public UserInputHandler(PrintWriter out) {
+      this.out = out;
     }
 
-    // Update the UI
-    public void updateOnlineFriendsList(String[] friends) {
-      if (onlineFriends != null) {
-        onlineFriends.clear();
+    public void run() {
+      try (BufferedReader userInput = new BufferedReader(new InputStreamReader(System.in))) {
+        String userInputStr;
+
+        while ((userInputStr = userInput.readLine()) != null) {
+          if (userInputStr.trim().isEmpty()) {
+            continue;
+          }
+          // Send message to server
+          out.println(userInputStr);
+          out.flush();
+        }
+      } catch (IOException e) {
+        System.out.println("Error reading user input: " + e.getMessage());
       }
-      for (String friend : friends) {
-        onlineFriends.add(friend);
-      }
-      SwingUtilities.invokeLater(() -> lobbyView.updateOnlineFriendsList(onlineFriends.toArray(new String[0])));
     }
   }
 }
