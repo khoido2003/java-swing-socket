@@ -80,6 +80,11 @@ public class LobbyView extends JFrame {
     friendRequestPanel.add(friendRequestScrollPane, BorderLayout.CENTER);
     leftPanel.add(friendRequestPanel, BorderLayout.SOUTH); // Add friend requests panel at the bottom
 
+    JButton gBtn = new JButton("Test game view");
+    leftPanel.add(gBtn);
+
+    gBtn.addActionListener(e -> this.lobbyController.requestCreateNewGameMatch());
+
     mainPanel.add(leftPanel, BorderLayout.WEST);
 
     // -----------------------------------------------------------------
@@ -164,6 +169,15 @@ public class LobbyView extends JFrame {
     });
   }
 
+  // public void showGameView() {
+  // // GameView gameView = new GameView();
+  // // gameView.setVisible(true);
+
+  // NewGameView game = new NewGameView();
+  // game.setVisible(true);
+  // this.setVisible(false);
+  // }
+
   public void setUserId(String userId) {
     this.userId = userId;
   }
@@ -188,12 +202,12 @@ public class LobbyView extends JFrame {
   // Method to add a friend to the list
   public void addFriendToList(java.util.List<User> users) {
     for (User user : users) {
-      friendsListModel.addElement(new FriendPanel(user, true));
+      friendsListModel.addElement(new FriendPanel(user, true, this.lobbyController));
     }
   }
 
   public void updateFriendList(User user) {
-    friendsListModel.addElement(new FriendPanel(user, true));
+    friendsListModel.addElement(new FriendPanel(user, true, this.lobbyController));
   }
 
   // Method to simulate searching for a friend
@@ -231,9 +245,11 @@ public class LobbyView extends JFrame {
   class FriendPanel extends JPanel {
     private User friend;
     private JButton inviteButton;
+    private LobbyController lobbyController;
 
-    public FriendPanel(User friend, boolean isOnline) {
+    public FriendPanel(User friend, boolean isOnline, LobbyController lobbyController) {
       this.friend = friend;
+      this.lobbyController = lobbyController;
 
       setLayout(new FlowLayout(FlowLayout.LEFT));
       JLabel nameLabel = new JLabel(friend.getUsername());
@@ -244,15 +260,20 @@ public class LobbyView extends JFrame {
       add(statusLabel);
       add(inviteButton);
 
-      inviteButton.addActionListener(e -> inviteFriend());
+      inviteButton.addActionListener(e -> inviteFriend(friend.getUserId()));
     }
 
     public JButton getInviteButton() {
       return inviteButton;
     }
 
-    private void inviteFriend() {
-      JOptionPane.showMessageDialog(null, "Invitation sent to " + friend.getUsername());
+    private void inviteFriend(String friendID) {
+
+      this.lobbyController.requestCreateNewGameMatch(friendID);
+
+      // JOptionPane.showMessageDialog(null, "Invitation sent to " +
+      // friend.getUsername());
+
     }
   }
 

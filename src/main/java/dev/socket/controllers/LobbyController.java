@@ -3,6 +3,9 @@ package dev.socket.controllers;
 import java.util.ArrayList;
 import java.util.List;
 
+import javax.swing.JDialog;
+import javax.swing.JOptionPane;
+
 import dev.socket.interfaces.SocketObserver;
 import dev.socket.models.JwtToken;
 import dev.socket.models.User;
@@ -10,16 +13,19 @@ import dev.socket.models.User;
 import dev.socket.network.SocketClient;
 import dev.socket.utils.JwtUtils;
 import dev.socket.views.LobbyView;
+import dev.socket.views.NewGameView;
 
 public class LobbyController implements SocketObserver {
 
   private SocketClient socketClient;
   private List<User> userList = new ArrayList<>();
 
+  private String curFriendID;
   private String userID;
   private String username;
   private String token;
   private LobbyView lobbyView;
+  private JDialog waitingDialog;
 
   public LobbyController(SocketClient socketClient) {
     this.socketClient = socketClient;
@@ -27,6 +33,10 @@ public class LobbyController implements SocketObserver {
 
   public void setLobbyView(LobbyView lobbyView) {
     this.lobbyView = lobbyView;
+  }
+
+  public String getUsername() {
+    return username;
   }
 
   public void setToken(String token) {
@@ -40,6 +50,17 @@ public class LobbyController implements SocketObserver {
     lobbyView.setUserId(userID);
     lobbyView.setUserName(username);
     lobbyView.updateUserInfo();
+  }
+
+  public void requestCreateNewGameMatch() {
+    NewGameView newGameView = new NewGameView();
+    this.lobbyView.setVisible(false);
+    newGameView.setVisible(true);
+
+    GameController gameController = new GameController(this, socketClient, newGameView, this.lobbyView);
+
+    newGameView.setGameController(gameController);
+    socketClient.addObserver(gameController);
   }
 
   @Override
@@ -60,7 +81,6 @@ public class LobbyController implements SocketObserver {
         userList = User.dejsonlizeArray(response);
         lobbyView.addFriendToList(userList);
       }
-
     }
 
     if (message.startsWith("UPDATE_FRIEND_ONLINE:")) {
@@ -102,7 +122,58 @@ public class LobbyController implements SocketObserver {
       User user = User.dejsonlizeObject(response);
       this.lobbyView.updateFriendList(user);
     }
+
+    if (message.startsWith("RESPONSE_CREATE_NEW_ROOM:")) {
+      String roomID = message.split(" ")[1];
+
+      System.out.println(roomID);
+
+      this.inviteFriendToGameMatch(roomID);
+    }
+
+    if (message.startsWith("RESPONSE_INVITE_TO_JOIN_MATCH:")) {
+      String response = message.substring(31);
+      System.out.println("Invite to join match from " + response);
+
+      NewGameView newGameView = new NewGameView();
+
+      int userResponse = JOptionPane.showConfirmDialog(newGameView, "Do you want to accept the battle?",
+          "Match Invitation", JOptionPane.YES_NO_CANCEL_OPTION);
+
+      if (userResponse == JOptionPane.YES_OPTION) {
+        // Notify the socket server that the invite was accepted
+        socketClient.sendMessage("ACCEPT_MATCH_INVITE: " + userID + " " + response);
+
+        // Hide the lobby view and show the new game view
+        this.lobbyView.setVisible(false);
+        newGameView.setVisible(true);
+      } else if (userResponse == JOptionPane.NO_OPTION) {
+        // Notify the socket server that the invite was declined
+        socketClient.sendMessage("DECLINE_MATCH_INVITE: " + userID + " " + response);
+      } else {
+        socketClient.sendMessage("DECLINE_MATCH_INVITE: " + userID + " " + response);
+      }
+    }
+
+    if (message.startsWith("RESPONSE_ACCEPT_MATCH_INVITE: ")) {
+      NewGameView newGameView = new NewGameView();
+      this.waitingDialog.setVisible(false);
+      this.lobbyView.setVisible(false);
+      newGameView.setVisible(true);
+
+      GameController gameController = new GameController(this, socketClient, newGameView, this.lobbyView);
+
+      newGameView.setGameController(gameController);
+      socketClient.addObserver(gameController);
+
+    }
+
+    if (message.startsWith("RESPONSE_DECLINE_MATCH_INVITE: ")) {
+      this.waitingDialog.setVisible(false);
+    }
   }
+
+  ///////////////////////////////////////////////////
 
   public void sendRequestFriendList() {
     JwtToken token = JwtUtils.decodeToken(this.token);
@@ -127,4 +198,27 @@ public class LobbyController implements SocketObserver {
   public void acceptFriendRequest(String userId, String friendId) {
     socketClient.sendMessage("REQUEST_ACCEPT_FRIEND_REQUEST: " + userId + " " + friendId);
   }
+
+  public void requestCreateNewGameMatch(String friendID) {
+    // Send the request to the server
+    socketClient.sendMessage("REQUEST_CREATE_NEW_ROOM: " + this.userID);
+
+    this.curFriendID = friendID;
+
+    // Show a non-blocking waiting dialog (JDialog)
+    waitingDialog = new JDialog();
+    waitingDialog.setTitle("Waiting for another player...");
+    waitingDialog.setSize(300, 150);
+    waitingDialog.setLocationRelativeTo(null);
+    waitingDialog.setModal(false);
+    waitingDialog.setVisible(true);
+
+    // You can add other UI elements inside the dialog if needed (e.g., loading
+    // spinner)
+  }
+
+  public void inviteFriendToGameMatch(String roomID) {
+    socketClient.sendMessage("REQUEST_INVITE_FRIEND_TO_MATCH: " + this.curFriendID + " " + roomID);
+  }
+
 }
