@@ -18,7 +18,10 @@ public class SocketClient {
   BufferedReader in;
 
   // List of observers (subscribers)
-  private List<SocketObserver> observers;
+  private boolean isNotifying = false;
+  private List<SocketObserver> observers = new ArrayList<>();
+  private List<SocketObserver> observersToAdd = new ArrayList<>();
+  private List<SocketObserver> observersToRemove = new ArrayList<>();
 
   public SocketClient(String serverAddress, int serverPort, String jwtToken) {
     this.serverAddress = serverAddress;
@@ -27,21 +30,44 @@ public class SocketClient {
     this.observers = new ArrayList<>();
   }
 
-  public void addObserver(SocketObserver observer) {
-    observers.add(observer);
-  }
-
-  // Remove an observer
-  public void removeObserver(SocketObserver observer) {
-    observers.remove(observer);
-  }
-
-  // Notify all observers of a new message
-  public void notifyObservers(String message) {
-    for (SocketObserver observer : observers) {
-      observer.onMessageReceived(message);
+  public synchronized void addObserver(SocketObserver observer) {
+    if (isNotifying) {
+      // Defer adding the observer until notification is done
+      observersToAdd.add(observer);
+    } else {
+      observers.add(observer);
     }
   }
+
+  public synchronized void removeObserver(SocketObserver observer) {
+    if (isNotifying) {
+      // Defer removing the observer until notification is done
+      observersToRemove.add(observer);
+    } else {
+      observers.remove(observer);
+    }
+  }
+
+  public synchronized void notifyObservers(String message) {
+    isNotifying = true;
+
+    try {
+      for (SocketObserver observer : observers) {
+        observer.onMessageReceived(message);
+      }
+    } finally {
+      isNotifying = false;
+
+      // Now process deferred adds and removes
+      observers.addAll(observersToAdd);
+      observersToAdd.clear();
+
+      observers.removeAll(observersToRemove);
+      observersToRemove.clear();
+    }
+  }
+
+  /////////////////////////////////
 
   public void start() {
     try (Socket socket = new Socket(serverAddress, serverPort)) {

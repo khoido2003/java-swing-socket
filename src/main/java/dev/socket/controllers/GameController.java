@@ -37,4 +37,9 @@ public class GameController implements SocketObserver {
     this.newGameView.getjLabel2().setText(userName);
   }
 
+  public void startGame() {
+    this.newGameView.getLblQuestion().setText("");
+    ;
+  }
+
 }

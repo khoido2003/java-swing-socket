@@ -144,6 +144,10 @@ public class LobbyController implements SocketObserver {
         // Notify the socket server that the invite was accepted
         socketClient.sendMessage("ACCEPT_MATCH_INVITE: " + userID + " " + response);
 
+        GameController gameController = new GameController(this, socketClient, newGameView, this.lobbyView);
+        newGameView.setGameController(gameController);
+        socketClient.addObserver(gameController);
+
         // Hide the lobby view and show the new game view
         this.lobbyView.setVisible(false);
         newGameView.setVisible(true);
