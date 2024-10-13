@@ -8,6 +8,7 @@ import javax.swing.BorderFactory;
 import javax.swing.BoxLayout;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
+import javax.swing.SwingUtilities;
 
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -17,7 +18,6 @@ public class NewGameView extends javax.swing.JFrame {
         GameController gameController;
 
         public NewGameView() {
-                // StartTime(10);
                 initComponents();
 
                 this.btnExit.addActionListener(e -> listenLeaveRoom());
@@ -85,7 +85,7 @@ public class NewGameView extends javax.swing.JFrame {
                 lblQuestion.setFont(new java.awt.Font("Segoe UI", 1, 18)); // NOI18N
 
                 lblClock.setFont(new java.awt.Font("Segoe UI", 1, 24)); // NOI18N
-                lblClock.setText("10");
+                lblClock.setText("5");
 
                 javax.swing.GroupLayout jPanel3Layout = new javax.swing.GroupLayout(jPanel3);
                 jPanel3.setLayout(jPanel3Layout);
@@ -137,7 +137,6 @@ public class NewGameView extends javax.swing.JFrame {
                 jLabel4.setText("Câu:");
 
                 lblNumberQuestion.setFont(new java.awt.Font("Segoe UI", 1, 14)); // NOI18N
-                lblNumberQuestion.setText("1");
 
                 javax.swing.GroupLayout jPanel4Layout = new javax.swing.GroupLayout(jPanel4);
                 jPanel4.setLayout(jPanel4Layout);
@@ -171,7 +170,7 @@ public class NewGameView extends javax.swing.JFrame {
                 jLabel6.setText("Điểm số:");
 
                 lblPoint.setFont(new java.awt.Font("Segoe UI", 1, 14)); // NOI18N
-                lblPoint.setText("10");
+                lblPoint.setText("0");
 
                 btnExit.setFont(new java.awt.Font("Segoe UI", 1, 14)); // NOI18N
                 btnExit.setText("Thoát");
@@ -279,23 +278,60 @@ public class NewGameView extends javax.swing.JFrame {
                 pack();
         }
 
-        private void btnSentActionPerformed(java.awt.event.ActionEvent evt) {
+        public void btnSentActionPerformed(java.awt.event.ActionEvent evt) {
+                // Get the input from the text field
+                String input = txtAnswer.getText();
+
+                // Optional: Validate or process the input
+                if (input.isEmpty()) {
+                        JOptionPane.showMessageDialog(null, "Please enter an answer!");
+                        return;
+                }
+
+                // Send the input (example: sending it to a server or handling the logic)
+                sendInput(input);
+
+                // Clear the input field after sending
+                txtAnswer.setText("");
+        }
+
+        public void sendInput(String input) {
+
+                this.gameController.answerQuestion(input);
+                // Example: Sending the input (this could be a network call, etc.)
+                System.out.println("Sending answer: " + input);
+
+                // For network, you might have something like this:
+                // networkClient.sendMessage("ANSWER: " + input);
         }
 
         // setup Đồng hồ
-        private void StartTime(int TimeinSecond) {
+        public void StartTime(int TimeinSecond) {
+                // Stop any previous timer
+                if (timer != null && timer.isRunning()) {
+                        timer.stop();
+                }
+
                 timeRemaining = TimeinSecond;
+
+                // Use Swing Timer for proper UI thread management
                 timer = new javax.swing.Timer(1000, new ActionListener() {
                         @Override
                         public void actionPerformed(ActionEvent e) {
+
+                                // Update the clock on the Event Dispatch Thread
+                                SwingUtilities.invokeLater(() -> {
+                                        lblClock.setText(String.valueOf(timeRemaining));
+
+                                        // Stop the timer when timeRemaining is 0
+                                        if (timeRemaining <= 0) {
+                                                lblClock.setText("0"); // Ensure the final display shows "0"
+                                                timer.stop();
+                                        }
+                                });
+
+                                // Decrement the time first
                                 timeRemaining--;
-                                lblClock.setText(String.valueOf(timeRemaining));
-                                if (timeRemaining <= 0) {
-                                        timer.stop();
-                                        JOptionPane.showMessageDialog(null, "Hết giờ!");
-                                        // Thực hiện các hành động khác khi hết giờ, ví dụ: không cho người chơi gửi câu
-                                        // trả lời.
-                                }
                         }
                 });
                 timer.start();
@@ -353,6 +389,18 @@ public class NewGameView extends javax.swing.JFrame {
 
         public javax.swing.JLabel getLblQuestion() {
                 return lblQuestion;
+        }
+
+        public javax.swing.JLabel getLblNumberQuestion() {
+                return lblNumberQuestion;
+        }
+
+        public javax.swing.JLabel getLblPoint() {
+                return lblPoint;
+        }
+
+        public javax.swing.JTextField getTxtAnswer() {
+                return txtAnswer;
         }
 
         // Variables declaration - do not modify//GEN-BEGIN:variables

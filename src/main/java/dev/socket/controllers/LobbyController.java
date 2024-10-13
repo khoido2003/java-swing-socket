@@ -52,12 +52,13 @@ public class LobbyController implements SocketObserver {
     lobbyView.updateUserInfo();
   }
 
+  // TEST GAME VIEW
   public void requestCreateNewGameMatch() {
     NewGameView newGameView = new NewGameView();
     this.lobbyView.setVisible(false);
     newGameView.setVisible(true);
 
-    GameController gameController = new GameController(this, socketClient, newGameView, this.lobbyView);
+    GameController gameController = new GameController(this, socketClient, newGameView, this.lobbyView, "");
 
     newGameView.setGameController(gameController);
     socketClient.addObserver(gameController);
@@ -135,6 +136,8 @@ public class LobbyController implements SocketObserver {
       String response = message.substring(31);
       System.out.println("Invite to join match from " + response);
 
+      String roomID = message.split(" ")[1];
+
       NewGameView newGameView = new NewGameView();
 
       int userResponse = JOptionPane.showConfirmDialog(newGameView, "Do you want to accept the battle?",
@@ -144,7 +147,7 @@ public class LobbyController implements SocketObserver {
         // Notify the socket server that the invite was accepted
         socketClient.sendMessage("ACCEPT_MATCH_INVITE: " + userID + " " + response);
 
-        GameController gameController = new GameController(this, socketClient, newGameView, this.lobbyView);
+        GameController gameController = new GameController(this, socketClient, newGameView, this.lobbyView, roomID);
         newGameView.setGameController(gameController);
         socketClient.addObserver(gameController);
 
@@ -160,12 +163,16 @@ public class LobbyController implements SocketObserver {
     }
 
     if (message.startsWith("RESPONSE_ACCEPT_MATCH_INVITE: ")) {
+
+      String roomID = message.split(" ")[1];
+      System.out.println(roomID);
+
       NewGameView newGameView = new NewGameView();
       this.waitingDialog.setVisible(false);
       this.lobbyView.setVisible(false);
       newGameView.setVisible(true);
 
-      GameController gameController = new GameController(this, socketClient, newGameView, this.lobbyView);
+      GameController gameController = new GameController(this, socketClient, newGameView, this.lobbyView, roomID);
 
       newGameView.setGameController(gameController);
       socketClient.addObserver(gameController);
@@ -178,6 +185,8 @@ public class LobbyController implements SocketObserver {
   }
 
   ///////////////////////////////////////////////////
+  /// ////////////////////////////////////////////////////
+  /// /////////////////////////////////////////////////////////
 
   public void sendRequestFriendList() {
     JwtToken token = JwtUtils.decodeToken(this.token);
