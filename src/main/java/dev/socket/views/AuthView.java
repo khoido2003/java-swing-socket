@@ -30,7 +30,6 @@ public class AuthView extends JFrame {
     panel.add(signUpBtn);
 
     add(panel);
-
   }
 
   private void showLoginForm() {
