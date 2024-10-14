@@ -403,6 +403,10 @@ public class NewGameView extends javax.swing.JFrame {
                 return txtAnswer;
         }
 
+        public javax.swing.JButton getBtnSent() {
+                return btnSent;
+        }
+
         // Variables declaration - do not modify//GEN-BEGIN:variables
         private javax.swing.JButton btnExit;
         private javax.swing.JButton btnSent;
