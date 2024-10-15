@@ -76,8 +76,21 @@ public class GameController implements SocketObserver {
     }
 
     if (message.startsWith("RESULT:")) {
-      String res = message.substring(8);
-      javax.swing.JOptionPane.showMessageDialog(null, "Your final result is: " + this.currentPoint + "\n" + res, res,
+      String res = message.substring(8).trim();
+      String trophies = "";
+      switch (res) {
+        case "You win!":
+          trophies = "You gain 30 trophies.";
+          break;
+        case "You lose!":
+          trophies = "You lost 30 trophies.";
+          break;
+        default:
+          break;
+      }
+
+      javax.swing.JOptionPane.showMessageDialog(null,
+          "Your final result is: " + this.currentPoint + "\n" + res + "\n" + trophies, res,
           javax.swing.JOptionPane.INFORMATION_MESSAGE);
       resultRequested = false; // Reset flag after result is received
     }
@@ -86,6 +99,7 @@ public class GameController implements SocketObserver {
   public void leaveRoom() {
     this.newGameView.setVisible(false);
     this.lobbyView.setVisible(true);
+    this.socketClient.sendMessage("REMOVE_ROOM: " + roomID);
   }
 
   public void setUserName(String userName) {
