@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import javax.swing.JDialog;
+import javax.swing.JFrame;
 import javax.swing.JOptionPane;
 
 import dev.socket.interfaces.SocketObserver;
@@ -148,6 +149,9 @@ public class LobbyController implements SocketObserver {
         socketClient.sendMessage("ACCEPT_MATCH_INVITE: " + userID + " " + response);
 
         GameController gameController = new GameController(this, socketClient, newGameView, this.lobbyView, roomID);
+        newGameView.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        newGameView.setLocationRelativeTo(null);
+
         newGameView.setGameController(gameController);
         socketClient.addObserver(gameController);
 
@@ -168,6 +172,7 @@ public class LobbyController implements SocketObserver {
       System.out.println(roomID);
 
       NewGameView newGameView = new NewGameView();
+
       this.waitingDialog.setVisible(false);
       this.lobbyView.setVisible(false);
       newGameView.setVisible(true);
@@ -175,8 +180,9 @@ public class LobbyController implements SocketObserver {
       GameController gameController = new GameController(this, socketClient, newGameView, this.lobbyView, roomID);
 
       newGameView.setGameController(gameController);
+      newGameView.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+      newGameView.setLocationRelativeTo(null);
       socketClient.addObserver(gameController);
-
     }
 
     if (message.startsWith("RESPONSE_DECLINE_MATCH_INVITE: ")) {
@@ -184,8 +190,8 @@ public class LobbyController implements SocketObserver {
     }
   }
 
-  ///////////////////////////////////////////////////
-  /// ////////////////////////////////////////////////////
+  ////////////////////////////////////////////////////////
+  ///////////////////////////////////////////////////////
   /// /////////////////////////////////////////////////////////
 
   public void sendRequestFriendList() {

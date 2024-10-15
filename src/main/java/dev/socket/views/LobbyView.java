@@ -54,7 +54,6 @@ public class LobbyView extends JFrame {
     userIdLabel = new JLabel("ID: " + this.userId);
 
     joinBattleButton = new JButton("Join Battle");
-    friendlyMatchButton = new JButton("Friendly match");
     rankingsButton = new JButton("Bảng xếp hạng");
 
     leftPanel.add(userNameLabel);
