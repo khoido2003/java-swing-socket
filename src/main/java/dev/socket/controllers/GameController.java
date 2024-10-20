@@ -59,7 +59,6 @@ public class GameController implements SocketObserver {
       this.newGameView.getLblPoint().setText(String.valueOf(this.currentPoint));
       this.newGameView.getBtnSent().setEnabled(false);
       this.newGameView.getTxtAnswer().setEnabled(false);
-
     }
 
     if (message.startsWith("WRONG:")) {
@@ -111,7 +110,6 @@ public class GameController implements SocketObserver {
   }
 
   public void answerQuestion(String answer) {
-
     this.socketClient.sendMessage("ANSWER_QUESTION: " + roomID + " " + answer);
   }
 

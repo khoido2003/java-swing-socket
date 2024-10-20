@@ -61,7 +61,7 @@ public class LobbyView extends JFrame {
     leftPanel.add(Box.createRigidArea(new Dimension(0, 20))); // Space between elements
     leftPanel.add(joinBattleButton);
     leftPanel.add(Box.createRigidArea(new Dimension(0, 10)));
-    leftPanel.add(friendlyMatchButton);
+    // leftPanel.add(friendlyMatchButton);
     leftPanel.add(Box.createRigidArea(new Dimension(0, 10)));
     leftPanel.add(rankingsButton);
 
@@ -79,10 +79,12 @@ public class LobbyView extends JFrame {
     friendRequestPanel.add(friendRequestScrollPane, BorderLayout.CENTER);
     leftPanel.add(friendRequestPanel, BorderLayout.SOUTH); // Add friend requests panel at the bottom
 
-    JButton gBtn = new JButton("Test game view");
-    leftPanel.add(gBtn);
+    // Use this to see the game view withou need two people to join the game
+    // JButton gBtn = new JButton("Test game view");
+    // leftPanel.add(gBtn);
 
-    gBtn.addActionListener(e -> this.lobbyController.requestCreateNewGameMatch());
+    // gBtn.addActionListener(e ->
+    // this.lobbyController.requestCreateNewGameMatch());
 
     mainPanel.add(leftPanel, BorderLayout.WEST);
 
@@ -152,6 +154,10 @@ public class LobbyView extends JFrame {
           addFriendButton.doClick();
         }
       }
+    });
+
+    rankingsButton.addActionListener(e -> {
+      this.lobbyController.showLeaderboardView();
     });
 
     friendRequestList.addMouseListener(new java.awt.event.MouseAdapter() {

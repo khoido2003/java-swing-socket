@@ -10,9 +10,9 @@ import javax.swing.JOptionPane;
 import dev.socket.interfaces.SocketObserver;
 import dev.socket.models.JwtToken;
 import dev.socket.models.User;
-// import dev.socket.models.User;
 import dev.socket.network.SocketClient;
 import dev.socket.utils.JwtUtils;
+import dev.socket.views.LeaderboardView;
 import dev.socket.views.LobbyView;
 import dev.socket.views.NewGameView;
 
@@ -240,4 +240,18 @@ public class LobbyController implements SocketObserver {
     socketClient.sendMessage("REQUEST_INVITE_FRIEND_TO_MATCH: " + this.curFriendID + " " + roomID);
   }
 
+  public void showLeaderboardView() {
+    LeaderboardController leaderboardController = new LeaderboardController(socketClient);
+    socketClient.addObserver(leaderboardController);
+
+    LeaderboardView leaderboardView = new LeaderboardView(leaderboardController);
+
+    leaderboardController.setLeaderboardView(leaderboardView);
+    leaderboardController.setLobbyView(lobbyView);
+
+    leaderboardView.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+    leaderboardView.setVisible(true);
+    lobbyView.setVisible(false);
+    leaderboardView.setLocationRelativeTo(null);
+  }
 }
