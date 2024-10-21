@@ -160,6 +160,10 @@ public class LobbyView extends JFrame {
       this.lobbyController.showLeaderboardView();
     });
 
+    joinBattleButton.addActionListener(e -> {
+      this.lobbyController.requestJoinNewMatch();
+    });
+
     friendRequestList.addMouseListener(new java.awt.event.MouseAdapter() {
       public void mouseClicked(java.awt.event.MouseEvent evt) {
         int index = friendRequestList.locationToIndex(evt.getPoint());
