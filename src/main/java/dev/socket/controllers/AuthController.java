@@ -34,6 +34,8 @@ public class AuthController {
       JOptionPane.showMessageDialog(signInView, "Sign in successfully");
 
       SocketClient socketClient = new SocketClient("26.139.36.203", Const.port, authService.jwtToken);
+      // SocketClient socketClient = new SocketClient("127.0.0.1", Const.port,
+      // authService.jwtToken);
       new Thread(() -> {
         socketClient.start();
       }).start(); // This will start the SocketClient in a new thread
