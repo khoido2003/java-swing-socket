@@ -12,9 +12,11 @@ public class AuthService {
 
   public String jwtToken;
 
+  @SuppressWarnings("deprecation")
   public String signIn(User user) {
     try {
-      URL url = new URL("http://localhost:8081/login");
+      URL url = new URL("http://26.139.36.203:8081/login");
+      // URL url = new URL("localhost:8081/login");
       HttpURLConnection conn = (HttpURLConnection) url.openConnection();
       conn.setRequestMethod("POST");
       conn.setRequestProperty("Content-Type", "application/json");
@@ -67,9 +69,11 @@ public class AuthService {
   ///////////////////////////////////////////////////////
 
   // Sign up method
+  @SuppressWarnings("deprecation")
   public String signUp(User user) {
     try {
-      URL url = new URL("http://localhost:8081/signup");
+      URL url = new URL("http://26.139.36.203:8081/signup");
+      // URL url = new URL("localhost:8081/signup");
       HttpURLConnection conn = (HttpURLConnection) url.openConnection();
       conn.setRequestMethod("POST");
       conn.setRequestProperty("Content-Type", "application/json");
@@ -86,6 +90,7 @@ public class AuthService {
       os.close();
 
       int responseCode = conn.getResponseCode();
+
       if (responseCode == HttpURLConnection.HTTP_OK) {
         Scanner scanner = new Scanner(conn.getInputStream());
         String response = scanner.useDelimiter("\\A").next();

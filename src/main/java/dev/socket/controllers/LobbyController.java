@@ -188,6 +188,27 @@ public class LobbyController implements SocketObserver {
     if (message.startsWith("RESPONSE_DECLINE_MATCH_INVITE: ")) {
       this.waitingDialog.setVisible(false);
     }
+
+    if (message.startsWith("RESPONSE_JOIN_NEW_MATCH:")) {
+
+      String roomID = message.split(" ")[1];
+      System.out.println("Invite to join match from " + roomID);
+
+      NewGameView newGameView = new NewGameView();
+
+      GameController gameController = new GameController(this, socketClient, newGameView, this.lobbyView, roomID);
+      newGameView.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+      newGameView.setLocationRelativeTo(null);
+
+      newGameView.setGameController(gameController);
+      socketClient.addObserver(gameController);
+
+      // Hide the lobby view and show the new game view
+      this.lobbyView.setVisible(false);
+      this.waitingDialog.setVisible(false);
+      newGameView.setVisible(true);
+    }
+
   }
 
   ////////////////////////////////////////////////////////
@@ -238,6 +259,17 @@ public class LobbyController implements SocketObserver {
 
   public void inviteFriendToGameMatch(String roomID) {
     socketClient.sendMessage("REQUEST_INVITE_FRIEND_TO_MATCH: " + this.curFriendID + " " + roomID);
+  }
+
+  public void requestJoinNewMatch() {
+    socketClient.sendMessage("REQUEST_JOIN_NEW_MATCH");
+
+    waitingDialog = new JDialog();
+    waitingDialog.setTitle("Tìm trận mới....");
+    waitingDialog.setSize(300, 150);
+    waitingDialog.setLocationRelativeTo(null);
+    waitingDialog.setModal(false);
+    waitingDialog.setVisible(true);
   }
 
   public void showLeaderboardView() {
