@@ -215,6 +215,16 @@ public class LobbyView extends JFrame {
     }
   }
 
+  public void removeUserFromList(String userID) {
+    for (int i = 0; i < friendsListModel.size(); i++) {
+      FriendPanel friendPanel = friendsListModel.get(i);
+      if (friendPanel.getFriend().getUserId().equals(userID)) {
+        friendsListModel.remove(i);
+        break;
+      }
+    }
+  }
+
   public void updateFriendList(User user) {
     friendsListModel.addElement(new FriendPanel(user, true, this.lobbyController));
   }
@@ -270,6 +280,10 @@ public class LobbyView extends JFrame {
       add(inviteButton);
 
       inviteButton.addActionListener(e -> inviteFriend(friend.getUserId()));
+    }
+
+    public User getFriend() {
+      return friend;
     }
 
     public JButton getInviteButton() {
