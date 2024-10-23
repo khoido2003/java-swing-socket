@@ -16,6 +16,7 @@ public class SocketClient {
   private String jwtToken;
   PrintWriter out;
   BufferedReader in;
+  private boolean isConnected = false;
 
   // List of observers (subscribers)
   private boolean isNotifying = false;
@@ -101,6 +102,7 @@ public class SocketClient {
 
     } catch (IOException e) {
       System.out.println("Client exception: " + e.getMessage());
+      reconnect();
     } catch (InterruptedException e) {
       Thread.currentThread().interrupt(); // Restore interrupted status
       System.out.println("Thread was interrupted: " + e.getMessage());
@@ -110,6 +112,43 @@ public class SocketClient {
   public void sendMessage(String message) {
     out.println(message);
     out.flush();
+  }
+
+  //////////////////////////////////////////////////////////
+  ///
+  @SuppressWarnings("resource")
+  private void reconnect() {
+    int retryInterval = 5000; // 5 seconds delay between reconnection attempts
+    boolean reconnecting = true;
+
+    while (reconnecting) {
+      try {
+        System.out.println("Attempting to reconnect to the server...");
+        // Reconnect logic
+        Socket socket = new Socket(serverAddress, serverPort);
+        out = new PrintWriter(socket.getOutputStream(), true);
+        in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+
+        // Resend the JWT token for authentication after reconnection
+        out.println(jwtToken);
+        out.flush();
+
+        // Restart the incoming message handler
+        Thread incomingThread = new Thread(new IncomingMessageHandler(in));
+        incomingThread.start();
+
+        reconnecting = false; // Successfully reconnected
+        System.out.println("Reconnected to the server.");
+      } catch (IOException e) {
+        System.out.println("Reconnection failed. Retrying in " + retryInterval / 1000 + " seconds...");
+        try {
+          Thread.sleep(retryInterval); // Wait before retrying
+        } catch (InterruptedException ie) {
+          Thread.currentThread().interrupt(); // Restore interrupted status
+          break;
+        }
+      }
+    }
   }
 
   ///////////////////////////////////////////////////////////
@@ -131,6 +170,7 @@ public class SocketClient {
         }
       } catch (IOException e) {
         System.out.println("Error reading from server: " + e.getMessage());
+        reconnect();
       }
     }
   }

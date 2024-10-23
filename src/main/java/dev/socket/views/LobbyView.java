@@ -14,6 +14,7 @@ public class LobbyView extends JFrame {
   private JLabel userIdLabel;
 
   private JButton joinBattleButton;
+  private JButton friendListButton;
   private JButton friendlyMatchButton;
   private JButton rankingsButton;
 
@@ -55,13 +56,14 @@ public class LobbyView extends JFrame {
 
     joinBattleButton = new JButton("Join Battle");
     rankingsButton = new JButton("Bảng xếp hạng");
+    friendListButton = new JButton("Xem danh sách bạn bè");
 
     leftPanel.add(userNameLabel);
     leftPanel.add(userIdLabel);
     leftPanel.add(Box.createRigidArea(new Dimension(0, 20))); // Space between elements
     leftPanel.add(joinBattleButton);
     leftPanel.add(Box.createRigidArea(new Dimension(0, 10)));
-    // leftPanel.add(friendlyMatchButton);
+    leftPanel.add(friendListButton);
     leftPanel.add(Box.createRigidArea(new Dimension(0, 10)));
     leftPanel.add(rankingsButton);
 
@@ -164,6 +166,10 @@ public class LobbyView extends JFrame {
       this.lobbyController.requestJoinNewMatch();
     });
 
+    friendListButton.addActionListener(e -> {
+      this.lobbyController.showFriendListView();
+    });
+
     friendRequestList.addMouseListener(new java.awt.event.MouseAdapter() {
       public void mouseClicked(java.awt.event.MouseEvent evt) {
         int index = friendRequestList.locationToIndex(evt.getPoint());
@@ -212,6 +218,16 @@ public class LobbyView extends JFrame {
   public void addFriendToList(java.util.List<User> users) {
     for (User user : users) {
       friendsListModel.addElement(new FriendPanel(user, true, this.lobbyController));
+    }
+  }
+
+  public void removeUserFromList(String userID) {
+    for (int i = 0; i < friendsListModel.size(); i++) {
+      FriendPanel friendPanel = friendsListModel.get(i);
+      if (friendPanel.getFriend().getUserId().equals(userID)) {
+        friendsListModel.remove(i);
+        break;
+      }
     }
   }
 
@@ -270,6 +286,10 @@ public class LobbyView extends JFrame {
       add(inviteButton);
 
       inviteButton.addActionListener(e -> inviteFriend(friend.getUserId()));
+    }
+
+    public User getFriend() {
+      return friend;
     }
 
     public JButton getInviteButton() {
