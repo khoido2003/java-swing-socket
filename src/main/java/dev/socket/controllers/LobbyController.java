@@ -12,6 +12,7 @@ import dev.socket.models.JwtToken;
 import dev.socket.models.User;
 import dev.socket.network.SocketClient;
 import dev.socket.utils.JwtUtils;
+import dev.socket.views.FriendListView;
 import dev.socket.views.LeaderboardView;
 import dev.socket.views.LobbyView;
 import dev.socket.views.NewGameView;
@@ -305,5 +306,21 @@ public class LobbyController implements SocketObserver {
     leaderboardView.setVisible(true);
     lobbyView.setVisible(false);
     leaderboardView.setLocationRelativeTo(null);
+  }
+
+  public void showFriendListView() {
+    FriendListController friendListController = new FriendListController(socketClient, userID);
+
+    socketClient.addObserver(friendListController);
+
+    FriendListView friendListView = new FriendListView(friendListController);
+
+    friendListController.setFriendListView(friendListView);
+    friendListController.setLobbyView(lobbyView);
+
+    friendListView.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+    friendListView.setVisible(true);
+    lobbyView.setVisible(false);
+    friendListView.setLocationRelativeTo(null);
   }
 }
